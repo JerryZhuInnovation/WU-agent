@@ -1,0 +1,12 @@
+{
+  "name": "dsh-wu-ai-router",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

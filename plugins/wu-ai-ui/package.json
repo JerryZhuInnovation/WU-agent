@@ -1,0 +1,44 @@
+{
+  "name": "dsh-wu-ai-ui",
+  "version": "0.2.0",
+  "private": true,
+  "description": "WU ai 客户端：路由切换 · 预设菜单 · 调度台 · 对话页皮肤",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index-DxFD9niy.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index-DxFD9niy.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "default": "./dist/client.js"
+    }
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "files": [
+    "dist/index.js",
+    "dist/client.js",
+    "dist/*.d.ts",
+    "cordis.patch.yml"
+  ],
+  "scripts": {
+    "bundle": "tsdown"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "react": "^18.3.1",
+    "tsdown": "^0.12.9",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,31 @@
+# 运行时生成（首次启动自动下载 / 安装，不含源码）
+runtime/
+data/
+.dsh/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# 依赖
+node_modules/
+
+# 日志 / 进程 / 本地临时
+*.log
+*.log.1
+*.pid
+*.tmp
+
+# 系统与编辑器
+.DS_Store
+.idea/
+.vscode/
+.workbuddy/
+
+# 本机截图 / 分享产物 / 交接备份
+.screenshots/
+.trae-html-share-packages/
+*.tar.gz
+
+# 本地工作台会话产物
+wu-ai-context/

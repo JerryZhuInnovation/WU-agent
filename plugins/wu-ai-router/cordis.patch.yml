@@ -1,0 +1,11 @@
+- insert:
+    - id: wu-ai-router
+      name: dsh-wu-ai-router
+      config:
+        # auto: Task→Capability→Model；off: 不干预
+        mode: auto
+        budget:
+          costWeight: 0.25
+          latencyWeight: 0.15
+        # 启动时由 start.py 按控制中心配置的 OpenAI 兼容模型重写；无内置预设
+        models: []

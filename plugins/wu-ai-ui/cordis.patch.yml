@@ -1,0 +1,7 @@
+# Bundle patch — 把 UI 插件注册为 Loader 条目。
+#
+# 只有成为「已启用的 Loader 条目」，DSH 才会扫描它的 dsh.client 半体并把
+# /plugins 下的客户端 bundle 下发给浏览器；否则对话页里不会出现「WU 路由」下拉。
+- insert:
+    - id: wu-ai-ui
+      name: dsh-wu-ai-ui

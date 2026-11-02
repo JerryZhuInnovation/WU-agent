@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WU AI · 单页工作台</title>
+  <!-- 不引第三方字体：控制中心是离线优先的本机应用，字体统一走 styles.css 的系统字体栈 -->
+  <link rel="stylesheet" href="styles.css?v=20261102" />
+</head>
+<body>
+<svg id="wu-seal-defs" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden"> <defs> <linearGradient id="wuSealBase" x1="0" y1="0" x2="0.55" y2="1"><stop offset="0" stop-color="#13201c"/><stop offset="1" stop-color="#07090b"/></linearGradient> <linearGradient id="wuSealTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2EE59D" stop-opacity=".12"/><stop offset=".62" stop-color="#2EE59D" stop-opacity="0"/></linearGradient> <linearGradient id="wuSealStroke" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2EE59D" stop-opacity=".5"/><stop offset="1" stop-color="#2EE59D" stop-opacity=".2"/></linearGradient> <linearGradient id="wuOrbitGreen" x1="0.5" y1="0" x2="0.5" y2="1"><stop offset="0" stop-color="#6BF5BD"/><stop offset="1" stop-color="#1FA97A"/></linearGradient> <linearGradient id="wuOrbitAmber" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FFB020" stop-opacity=".85"/><stop offset="1" stop-color="#2EE59D" stop-opacity=".9"/></linearGradient> <radialGradient id="wuCoreGlow"><stop offset="0" stop-color="#A8FFDE"/><stop offset=".42" stop-color="#2EE59D" stop-opacity=".5"/><stop offset="1" stop-color="#2EE59D" stop-opacity="0"/></radialGradient> <filter id="wuSealSoft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8"/></filter> <filter id="wuGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.2"/></filter> </defs> <g id="wuSealArt"> <rect x="2" y="2" width="116" height="116" rx="26" fill="url(#wuSealBase)" stroke="url(#wuSealStroke)" stroke-width="2"/> <rect x="2" y="2" width="116" height="116" rx="26" fill="url(#wuSealTop)"/> <rect x="6.5" y="6.5" width="107" height="107" rx="22.5" fill="none" stroke="#2EE59D" stroke-opacity=".07" stroke-width="1.2"/> <path d="M60 22L95 79L25 79Z" fill="none" stroke="url(#wuOrbitGreen)" stroke-width="3.2" stroke-linejoin="round"/> <path d="M60 97L88 46L32 46Z" fill="none" stroke="url(#wuOrbitAmber)" stroke-width="2.8" stroke-linejoin="round" opacity=".92"/> <g fill="none" stroke="#080B0C" stroke-width="7.2" stroke-linecap="round" stroke-linejoin="round"> <path d="M34 62Q60 41 86 62Q60 83 34 62Z"/> <path d="M60 79C49 72 48 49 60 43C72 49 71 72 60 79Z"/> <path d="M51 73C39 68 35 53 43 45C51 51 55 63 51 73Z"/> <path d="M69 73C81 68 85 53 77 45C69 51 65 63 69 73Z"/> </g> <g fill="none" stroke="url(#wuOrbitGreen)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"> <path d="M34 62Q60 41 86 62Q60 83 34 62Z"/> <path d="M60 79C49 72 48 49 60 43C72 49 71 72 60 79Z"/> <path d="M51 73C39 68 35 53 43 45C51 51 55 63 51 73Z"/> <path d="M69 73C81 68 85 53 77 45C69 51 65 63 69 73Z"/> </g> <g fill="#2EE59D" stroke="#080B0C" stroke-width="2.4"> <circle cx="60" cy="43" r="2.4"/> <circle cx="43" cy="45" r="2.1"/> <circle cx="77" cy="45" r="2.1"/> </g> <circle cx="60" cy="62" r="12.5" fill="url(#wuCoreGlow)" filter="url(#wuGlow)" opacity=".9"/> <circle cx="60" cy="62" r="8.2" fill="none" stroke="#FFB020" stroke-opacity=".55" stroke-width="1.7"/> <circle cx="60" cy="62" r="5.2" fill="#7BF3C2"/> <circle cx="58.2" cy="60.2" r="1.6" fill="#FFFFFF" opacity=".92"/> </g> </svg>
+
+<!-- ============================ 单页工作台：左栏（唯一导航/任务/产物）+ 主画布 ============================ -->
+<div class="shell">
+
+  <aside class="rail" id="rail">
+    <div class="rail-head">
+      <div class="brand-seal"><svg class="wu-seal-svg" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#wuSealArt"/></svg></div>
+      <span class="brand-name">WU AI</span>
+    </div>
+
+    <div class="rail-nav">
+      <button class="rail-btn primary" id="navLaunch">＋ 新任务</button>
+      <button class="rail-btn" id="btnOpenAgent" disabled>当前任务</button>
+    </div>
+
+    <section class="rail-sec grow">
+      <div class="rail-h">
+        <span>任务队列</span>
+        <button class="rail-ico" id="btnTasksRefresh" title="刷新任务历史" aria-label="刷新任务历史">↻</button>
+      </div>
+      <div class="rail-list" id="taskList">
+        <div class="rail-empty">还没有任务</div>
+      </div>
+    </section>
+
+    <div class="rail-foot">
+      <!-- 常驻热备指示灯（取代「启动 Agent」按钮）：引擎生命周期不再暴露给用户 -->
+      <div class="daemon-indicator" id="daemonIndicator" title="执行引擎常驻热备，派发即执行">
+        <span class="pulse-dot" id="daemonDot"></span>
+        <span id="daemonText">引擎预热中…</span>
+      </div>
+      <button class="rail-btn danger sm" id="btnStop" hidden disabled>停止运行</button>
+      <button class="rail-btn" id="btnDoctor">⚙ 设置（模型 / 环境）</button>
+      <button class="rail-btn primary" id="btnLaunch" hidden>启动 Agent</button>
+    </div>
+  </aside>
+
+  <main class="stage" id="stage" data-view="launch">
+
+    <!-- ---------- 状态 A：就绪 / 发射态（没有活跃任务时） ---------- -->
+    <section class="view view-launch" id="launchView">
+      <div class="launch-hero">
+        <span class="kicker">● WU AI · AUTONOMOUS TASK RUNNER</span>
+        <h1>说一句要做什么</h1>
+        <p>指定权限与核验强度，拆解、执行与沙箱验证全部交给 WU</p>
+      </div>
+
+      <form class="omni" id="omniForm" autocomplete="off">
+        <span class="omni-mark">›</span>
+        <textarea id="omniInput" rows="1" placeholder="描述目标产物与验收要求，Enter 派发 · Shift+Enter 换行 · 可直接 Cmd+V 粘贴截图"></textarea>
+        <button class="btn primary omni-go" id="omniGo" type="submit">派发 <kbd>↵</kbd></button>
+      </form>
+      <!-- 多模态附件条：Cmd+V 粘贴的截图 / @ 引用的沙箱文件 -->
+      <div class="attach-strip" id="attachStrip" hidden></div>
+      <div class="omni-toolbar">
+        <label class="pill-select" title="任务在受沙箱保护的工作区内执行">
+          <span>📁 工作区:</span>
+          <select class="pill-io" id="omniWorkspace">
+            <option value="sandbox">~/WU-ai-Work（默认沙箱）</option>
+          </select>
+        </label>
+        <label class="pill-select" title="完全自治会放开近全盘权限，需要确认">
+          <span>🛡️ 权限:</span>
+          <select class="pill-io" id="omniPermission">
+            <option value="workspace-write">沙箱读写（自动快照）</option>
+            <option value="full">完全自治（终端 / 浏览器验证）</option>
+          </select>
+        </label>
+        <label class="pill-select" title="快速直通跳过分配评估与独立核验">
+          <span>⚖️ 核验:</span>
+          <select class="pill-io" id="omniVerify">
+            <option value="strict">严格（可验证分配 + 独立核验）</option>
+            <option value="fast">快速直通（单模型直接干）</option>
+          </select>
+        </label>
+      </div>
+      <div class="omni-meta">
+        <span class="omni-predict" id="omniPredict"></span>
+      </div>
+      <div class="omni-tpls" id="omniTpls"></div>
+    </section>
+
+    <!-- ---------- 状态 B：任务执行态（派发后原地切换为执行看板） ---------- -->
+    <section class="view view-active" id="activeView" hidden>
+      <!-- 置顶任务契约栏：由发射器收缩而成，全页唯一流水线 -->
+      <div class="taskbar" id="taskbar">
+        <div class="contract-main">
+          <span class="task-dot" id="contractDot"></span>
+          <span class="contract-goal" id="contractGoal">—</span>
+        </div>
+        <div class="pipe" id="pipeStrip"></div>
+        <div class="taskbar-acts">
+          <span class="meta-pill" id="contractPerm" title="本次任务的权限边界">🛡️ 沙箱读写</span>
+          <span class="meta-pill" id="contractVerify" title="本次任务的核验强度">⚖️ 严格</span>
+          <button class="task-chip" id="btnTaskDiff" hidden title="查看本次任务改动">改动</button>
+          <button class="btn ghost sm" id="btnTrace">轨迹</button>
+          <button class="btn danger sm" id="btnAbortTask">■ 中止</button>
+        </div>
+      </div>
+
+      <!-- 主工作区：左 = 引擎实况 + 内联干预栏 · 右 = 产物柜（仅在有文件改动时出现） -->
+      <div class="board-grid">
+        <div class="board-left">
+          <div class="dock-h">执行实况 <span class="tag">引擎步骤流</span></div>
+          <iframe class="agent-frame" id="agentFrame" hidden title="任务执行实况"></iframe>
+          <div class="stage-empty" id="stageEmpty" hidden>
+            <div class="stage-empty-inner">
+              <b data-empty-title>Agent 未运行</b>
+              <span data-empty-sub>已派发的任务会在就绪后自动发送</span>
+            </div>
+          </div>
+          <!-- 内联干预栏：紧贴实况流正下方（不再塞在右下角窄缝里） -->
+          <div class="dock-steer">
+            <input type="text" id="steerInput" placeholder="💬 对当前任务追加约束、微调或继续追问，回车注入…" />
+            <button class="btn primary sm" id="btnSteer">注入</button>
+          </div>
+        </div>
+        <aside class="board-right" id="artifactDock">
+          <div class="dock-h">交付产物 <span class="tag" id="dockTag">—</span>
+            <button class="rail-ico" id="btnDockRefresh" title="刷新产物">↻</button>
+          </div>
+          <div class="dock-list" id="dockList">
+            <div class="rail-empty">还没有产物改动</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============================ 设置抽屉（运行诊断 / 舰队 / 模板 / 快照 / 轨迹 / 策略） ============================ -->
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="设置与运行时">
+  <div class="drawer-head">
+    <h3>设置与运行时</h3>
+    <button class="btn ghost sm" id="btnDrawerClose">关闭</button>
+  </div>
+  <div class="drawer-body">
+    <div class="boot-card doctor" id="doctorCard">
+      <div class="boot-title">$ wu doctor</div>
+    </div>
+
+    <!-- 模型舰队：调度主脑 + 执行工人（低频配置，默认藏在抽屉里） -->
+    <section class="card" id="modelCard">
+      <h3>FLEET <span class="tag" id="fleetTag">0 模型</span>
+        <span class="head-act"><button class="btn primary sm" id="btnAddModel">+ 添加</button></span>
+      </h3>
+      <div class="fleet-sec">
+        <div class="fleet-h">调度主脑 <span class="tag" id="brainTag">未指定</span></div>
+        <div class="brain-kv">
+          <div class="fk-main"><b id="brainModel">—</b><span id="brainState">○ 未指定</span></div>
+          <div class="fk-sub">位置 <b id="brainLoc">—</b> · 数据 <b id="brainData">—</b></div>
+        </div>
+        <div class="set-row top" id="brainWrap">
+          <span>调度模型</span>
+          <select class="io" id="analyzerModelId"></select>
+        </div>
+        <div class="set-row top" id="defaultModelWrap">
+          <span>回退模型</span>
+          <select class="io" id="defaultModelId"></select>
+        </div>
+        <div class="row-actions">
+          <button class="btn sm" id="btnTestBrain">测试 Router Brain</button>
+        </div>
+        <div class="hint" id="brainTestOut" hidden></div>
+      </div>
+      <div class="fleet-sec">
+        <div class="fleet-h">执行工人 <span class="tag" id="modelCount">0 个模型</span></div>
+        <div class="mlist" id="modelList"></div>
+      </div>
+      <div class="fleet-local" id="localCta" hidden>
+        <div><b>端侧 Metal 可用</b><span id="localCtaText"></span></div>
+        <button class="btn sm" id="btnLocalCta">启用本地模型</button>
+      </div>
+    </section>
+
+    <!-- 工作流模板：发射台快捷胶囊的唯一来源，管理放在抽屉里 -->
+    <section class="card">
+      <h3>WORKFLOWS <span class="tag" id="wfCount">0 个模板</span>
+        <span class="head-act"><button class="btn primary sm" id="btnWfNew">+ 新建</button></span>
+      </h3>
+      <div class="pulse-list" id="wfList"></div>
+      <div class="wf-form" id="wfForm" hidden>
+        <input class="io" id="wfName" placeholder="名称 *">
+        <textarea class="io" id="wfGoal" rows="2" placeholder="任务目标 *"></textarea>
+        <textarea class="io" id="wfSteps" rows="2" placeholder="执行步骤（可选）"></textarea>
+        <input class="io" id="wfGate" placeholder="质量门槛（可选）">
+        <input class="io" id="wfOutput" placeholder="输出格式（可选）">
+        <div class="row-actions">
+          <button class="btn primary sm" id="btnWfSave">保存</button>
+          <button class="btn ghost sm" id="btnWfCancel">取消</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 影子快照：本次任务改了哪些文件、怎么看 diff、怎么一键撤销 -->
+    <section class="card" id="shadowCard">
+      <h3>TASK DIFF <span class="tag" id="shadowTag">—</span>
+        <span class="head-act"><button class="btn ghost sm" id="btnShadowRefresh">刷新</button></span>
+      </h3>
+      <div class="pulse-stat" id="shadowStat">还没有任务快照</div>
+      <div class="shadow-list" id="shadowList"></div>
+      <pre class="shadow-diff" id="shadowDiff" hidden></pre>
+      <div class="row-actions">
+        <button class="btn" id="btnShadowRollback" disabled>撤销本次任务改动</button>
+      </div>
+    </section>
+
+    <!-- 运行轨迹：对话页胶囊 / 执行态「查看轨迹」联动到这里 -->
+    <section class="card" id="traceCard">
+      <h3>RUN TRACE <span class="tag" id="traceTag">暂无</span>
+        <span class="head-act"><button class="btn ghost sm" id="btnTraceRefresh">刷新</button></span>
+      </h3>
+      <div class="pulse-list" id="traceList"></div>
+    </section>
+
+    <!-- 可审计任务分配：盲态规划结论 / 五维评分 / 红队质疑 / 表现账本 -->
+    <section class="card" id="allocCard">
+      <h3>ALLOCATION <span class="tag" id="allocTag">暂无</span>
+        <span class="head-act"><button class="btn ghost sm" id="btnAllocRefresh">刷新</button></span>
+      </h3>
+      <div class="pulse-list" id="allocList"></div>
+      <pre class="shadow-diff" id="allocDetail" hidden></pre>
+      <div class="pulse-list" id="ledgerList"></div>
+    </section>
+
+    <!-- 风险审查与预算：审计摘要 + 哈希链自检 + 会话预算 -->
+    <section class="card">
+      <h3>RISK GUARD <span class="tag" id="riskTag">读取中</span></h3>
+      <div class="pulse-stat" id="riskStat">正在读取风险审计…</div>
+      <div class="pulse-list" id="riskList"></div>
+      <div class="hint" id="riskFoot"></div>
+    </section>
+
+    <section class="card" id="runtimeCard">
+      <h3>RUNTIME <span class="tag" id="rtTag">检测中</span></h3>
+      <div class="rt-main" id="rtMain">正在读取运行时信息…</div>
+      <div class="inline-warn" id="rtWarn" hidden></div>
+      <div class="rt-list" id="rtUpgrade" hidden></div>
+      <div class="row-actions">
+        <button class="btn" id="btnRtCheck">检查更新</button>
+        <button class="btn ghost" id="btnRtRollback" disabled>回滚上一版本</button>
+      </div>
+      <div class="mlist" id="runtimeList"></div>
+    </section>
+
+    <section class="card">
+      <h3>SANDBOX POLICY <span class="tag" id="policyTag">托管基线</span></h3>
+      <div class="set-row top"><span>workspace-write（基础沙箱）</span><span class="badge on">始终允许</span></div>
+      <div class="set-row top"><span>danger-full-access（近全盘）</span><input type="checkbox" id="polModeDanger"></div>
+      <div class="set-row top"><span>会话工具调用上限（次）</span><input class="io sm" type="number" id="polCalls" min="1" max="10000"></div>
+      <div class="set-row top"><span>会话时长上限（小时）</span><input class="io sm" type="number" id="polHours" min="1" max="24" step="0.5"></div>
+      <div class="set-row top"><span>审查连续失败熔断（次）</span><input class="io sm" type="number" id="polFails" min="1" max="50"></div>
+      <div class="row-actions">
+        <button class="btn primary sm" id="btnPolicySave">保存策略</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>FIRST RUN <span class="tag" id="frTag">0/4 步骤</span></h3>
+      <div class="onboard" id="frSteps"></div>
+    </section>
+
+    <section class="card">
+      <h3>ENVIRONMENT <span class="tag" id="envTag">沙箱 workspace-write</span></h3>
+      <div class="env">
+        <div class="env-row"><span>运行状态</span><code id="stateText">就绪</code></div>
+        <div class="env-row"><span>工作区</span><code id="envWs">~/WU-ai-Work</code></div>
+        <div class="env-row"><span>Agent</span><code id="envDsh">未运行</code></div>
+        <div class="env-row"><span>Node</span><code id="envNode">检测中</code></div>
+        <div class="env-row"><span>凭据</span><code id="envCred">检测中</code></div>
+      </div>
+      <div class="row-actions">
+        <button class="btn" id="btnInstallNode">安装 Node</button>
+        <button class="btn ghost" id="btnOpenTab" title="在独立标签页打开对话面（内嵌失败时的逃生口）">新标签打开</button>
+        <button class="btn ghost" id="btnReauth">重新登录</button>
+        <button class="btn ghost" id="btnExit">退出控制中心</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>SYSTEM <span class="tag" id="sysTag">就绪</span></h3>
+      <div class="row-actions">
+        <button class="btn sm" id="btnDoctor2">查看环境诊断</button>
+        <button class="btn ghost sm" id="btnSave">保存配置</button>
+      </div>
+    </section>
+  </div>
+</aside>
+
+<!-- ============================ 模型弹窗 ============================ -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="modalTitle">添加模型</h3>
+      <button class="btn ghost sm" id="btnCloseModal">关闭</button>
+    </div>
+    <div class="modal-body">
+      <label class="field block"><span>名称</span><input class="io" id="fLabel" /></label>
+      <label class="field block">
+        <span>接入方式</span>
+        <select class="io" id="fAccess">
+          <option value="api">云端 API</option>
+          <option value="local">本地模型</option>
+        </select>
+      </label>
+      <div id="localPick" hidden>
+        <label class="field block">
+          <span>本地接入</span>
+          <select class="io" id="fLocalMode">
+            <option value="new">新增</option>
+            <option value="existing">已有</option>
+          </select>
+        </label>
+      </div>
+      <div id="cloudFields">
+        <div class="grid2">
+          <label class="field"><span>模型 ID</span><input class="io" id="fModel" /></label>
+          <label class="field"><span>Base URL</span><input class="io" id="fBaseURL" /></label>
+        </div>
+        <label class="field block" style="margin-top:12px">
+          <span>API Key</span>
+          <input class="io" id="fApiKey" type="password" autocomplete="off" />
+        </label>
+      </div>
+      <div id="localNew" hidden>
+        <div class="step-box">
+          <button class="btn sm" id="btnHwDetect">检测硬件</button>
+          <div class="local-status" id="hwResult"></div>
+        </div>
+        <div class="step-box">
+          <button class="btn sm" id="btnLlamaInstall">安装对应 llama.cpp</button>
+          <div class="local-status" id="llamaResult"></div>
+        </div>
+        <div class="step-box">
+          <button class="btn sm" id="btnPickModel">选择模型文件</button>
+          <div class="local-status" id="pickResult"></div>
+          <input class="io" id="fModelPath" style="margin-top:8px" placeholder="模型文件路径" />
+        </div>
+        <div class="grid2" style="margin-top:12px">
+          <label class="field"><span>模型 ID</span><input class="io" id="fLocalModelId" /></label>
+          <label class="field">
+            <span>Base URL</span>
+            <input class="io" id="fLocalBaseURL" value="http://127.0.0.1:8080/v1" />
+          </label>
+        </div>
+      </div>
+      <div id="localExisting" hidden>
+        <div class="grid2">
+          <label class="field"><span>模型 ID</span><input class="io" id="fLocalExistingModel" /></label>
+          <label class="field">
+            <span>Base URL</span>
+            <input class="io" id="fLocalExistingURL" value="http://127.0.0.1:8080/v1" />
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" id="btnCancelModel">取消</button>
+      <button class="btn primary" id="btnSaveModel">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ 通用确认框（自绘，禁用原生 confirm） ============================ -->
+<div class="modal" id="confirmModal" hidden>
+  <div class="modal-card modal-narrow">
+    <div class="modal-head"><h3 id="confirmTitle">请确认</h3></div>
+    <div class="modal-body">
+      <p class="confirm-text" id="confirmText"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" id="confirmCancel">返回修改</button>
+      <button class="btn primary" id="confirmOk">继续</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<script type="module" src="app/main.js?v=20261102"></script>
+</body>
+</html>
